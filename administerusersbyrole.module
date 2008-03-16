@@ -1,0 +1,69 @@
+<?php
+// $id
+
+function administerusersbyrole_perm()
+{
+  $roles = db_query('SELECT name FROM {role} WHERE rid > 1 ORDER BY name');
+  $perms = array();
+  $perms[] = 'create users';
+  while( $role=db_fetch_array($roles) ) {
+    $perms[] = 'edit users with role '.$role['name'];
+    $perms[] = 'delete users with role '.$role['name'];
+  }
+  return $perms;
+}
+
+function administerusersbyrole_menu($may_cache)
+{
+  $items = array();
+  if( !$may_cache ) {
+    if( arg(0)==='admin' && arg(1)==='user' && arg(2)==='user' && arg(3)==='create' ) {
+      if( !user_access('create users') ) {
+        drupal_set_message(t('You do not have permission to create users.'), 'error');
+        drupal_goto("");
+      }
+    }
+    else if( arg(0)==='user' ) {
+      switch( arg(2) ) {
+        case 'edit':
+          $uid = arg(1);
+
+          // allow user to edit self.
+          global $user;
+          if( $uid === $user->uid )
+            break;
+
+          $account = user_load( array('uid'=>$uid) );
+
+          // otherwise check permissions.
+          $allowed=true;
+          foreach( $account->roles as $role )
+            if( !user_access('edit users with role '.$role) )
+              $allowed=false;
+
+          if( !$allowed ) {
+            drupal_set_message(t('You do not have permission to edit %user.', array('%user' => $account->name)), 'error');
+            drupal_goto("user/$uid");
+          }
+
+          break;
+
+        case 'delete':
+          $uid = arg(1);
+          $account = user_load( array('uid' => $uid) );
+          $allowed=true;
+          foreach( $account->roles as $role )
+            if( !user_access('delete users with role '.$role) )
+              $allowed=false;
+
+          if( !$allowed ) {
+            drupal_set_message(t('You do not have permission to delete %user.', array('%user' => $account->name)), 'error');
+            drupal_goto("user/$uid");
+          }
+
+          break;
+      }
+    }
+  }
+  return $items;
+}
