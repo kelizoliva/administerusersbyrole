@@ -28,25 +28,8 @@ function administerusersbyrole_init() {
   else if (arg(0)==='user') {
     switch (arg(2)) {
       case 'edit':
-        $uid = arg(1);
-
-        // allow user to edit self.
-        global $user;
-        if ($uid === $user->uid) {
-          break;
-        }
-
-        $account = user_load( array('uid' => $uid) );
-
-        // otherwise check permissions.
-        $allowed = TRUE;
-        foreach ($account->roles as $role) {
-          if (!user_access('edit users with role '. $role)) {
-            $allowed = FALSE;
-          }
-        }
-
-        if (!$allowed) {
+        $account = menu_get_object('user');
+        if (!_administerusersbyrole_can_edit_user($account)) {
           drupal_set_message(t('You do not have permission to edit %user.', array('%user' => $account->name)), 'error');
           drupal_goto("user/$uid");
         }
@@ -64,6 +47,20 @@ function administerusersbyrole_init() {
     }
   }
   return $items;
+}
+
+function _administerusersbyrole_can_edit_user($account) {
+  global $user;
+  if ($account->uid === $user->uid) {
+    return TRUE;
+  }
+
+  foreach ($account->roles as $role) {
+    if (!user_access('edit users with role '. $role)) {
+      return FALSE;
+    }
+  }
+  return TRUE;
 }
 
 function _administerusersbyrole_can_delete_user($account) {
@@ -90,5 +87,17 @@ function administerusersbyrole_form_user_multiple_delete_confirm_alter(&$form, &
   }
   if (!$anyallowed) {
     drupal_goto( substr($form['#action'], 1) );
+  }
+}
+
+function administerusersbyrole_user($op, &$edit, &$account, $category = NULL) {
+  if ($op === 'update' && $category === 'account') {
+    if (!_administerusersbyrole_can_edit_user($account)) {
+      if (isset($edit['status'])) {
+        $action = $edit['status'] ? t('unblock') : t('block');
+        drupal_set_message(t('You do not have permission to !action %user.', array('!action' => $action, '%user' => $account->name)), 'error');
+        unset($edit['status']);
+      }
+    }
   }
 }
