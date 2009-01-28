@@ -76,8 +76,7 @@ function _administerusersbyrole_can_edit_user($account) {
 }
 
 function _administerusersbyrole_can_delete_user($account) {
-  global $user;
-  if ($user->uid == 1) {
+  if ($account->uid == 1) {
     return FALSE;
   }
 
