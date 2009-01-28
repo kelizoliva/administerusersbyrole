@@ -7,7 +7,7 @@
  */
 
 function administerusersbyrole_perm() {
-  $roles = db_query('SELECT name FROM {role} WHERE rid > 1 ORDER BY name');
+  $roles = db_query('SELECT name FROM {role} WHERE rid > 2 ORDER BY name');
   $perms = array();
   $perms[] = 'create users';
   while ($role=db_fetch_array($roles)) {
@@ -28,16 +28,20 @@ function administerusersbyrole_init() {
   else if (arg(0)==='user') {
     switch (arg(2)) {
       case 'edit':
-        $account = menu_get_object('user');
+        $uid = arg(1);
+        $account = user_load( array('uid' => $uid) );
+
         if (!_administerusersbyrole_can_edit_user($account)) {
           drupal_set_message(t('You do not have permission to edit %user.', array('%user' => $account->name)), 'error');
-          drupal_goto("user/$uid");
+          drupal_goto('user/'. $account->uid);
         }
 
         break;
 
       case 'delete':
-        $account = menu_get_object('user');
+        $uid = arg(1);
+        $account = user_load( array('uid' => $uid) );
+
         if (!_administerusersbyrole_can_delete_user($account)) {
           drupal_set_message(t('You do not have permission to delete %user.', array('%user' => $account->name)), 'error');
           drupal_goto('user/'. $account->uid);
@@ -51,11 +55,19 @@ function administerusersbyrole_init() {
 
 function _administerusersbyrole_can_edit_user($account) {
   global $user;
-  if ($account->uid === $user->uid) {
+  if ($account->uid == $user->uid) {
     return TRUE;
   }
 
-  foreach ($account->roles as $role) {
+  // allow only uid1 to edit uid1
+  if ($account->uid == 1) {
+    return FALSE;
+  }
+
+  foreach ($account->roles as $rid => $role) {
+    if ($rid === DRUPAL_AUTHENTICATED_RID) {
+      continue;
+    }
     if (!user_access('edit users with role '. $role)) {
       return FALSE;
     }
@@ -64,7 +76,15 @@ function _administerusersbyrole_can_edit_user($account) {
 }
 
 function _administerusersbyrole_can_delete_user($account) {
-  foreach ($account->roles as $role) {
+  global $user;
+  if ($user->uid == 1) {
+    return FALSE;
+  }
+
+  foreach ($account->roles as $rid => $role) {
+    if ($rid === DRUPAL_AUTHENTICATED_RID) {
+      continue;
+    }
     if (!user_access('delete users with role '. $role)) {
       return FALSE;
     }
