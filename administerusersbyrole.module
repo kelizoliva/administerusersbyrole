@@ -12,12 +12,12 @@
   * Implements hook_permission().
   */
 function administerusersbyrole_permission() {
-  $roles = db_query('SELECT name FROM {role} WHERE rid > 1 ORDER BY name')->fetchAll();
+  $roles = user_roles();
   $perms = array();
   $perms['create users'] = array('title' => 'Create new users');
-  foreach ($roles as &$role) {
-    $perms['edit users with role '. $role->name] = array('title' => 'Edit users that have the role '. $role->name);
-    $perms['delete users with role '. $role->name] = array('title' => 'Delete users that have the role '. $role->name);
+  foreach ($roles as $rid => $role) {
+    $perms['edit users with role id '. $rid] = array('title' => 'Edit users that have the role '. $role);
+    $perms['delete users with role id '. $rid] = array('title' => 'Delete users that have the role '. $role);
   }
   return $perms;
 }
@@ -79,8 +79,16 @@ function _administerusersbyrole_can_edit_user($account) {
   }
   
   $permitted = TRUE;
-  foreach ($account->roles as $rid => $role) {
-    $permitted = $permitted && user_access('edit users with role '. $role);
+  // fix issue with authenticated role name:
+  // database and user_roles translate it,
+  // user controller loading $account->roles does not
+  // we need this until #1350914 is fixed
+  $accountroles = $account->roles;
+  $roles = user_roles();
+  $accountroles[2] = $roles[2];
+
+  foreach ($accountroles as $rid => $role) {
+    $permitted = $permitted && user_access('edit users with role id '. $rid);
   }
   return $permitted;
 }
@@ -91,7 +99,7 @@ function _administerusersbyrole_can_delete_user($account) {
   }
   $permitted = TRUE;
   foreach ($account->roles as $rid => $role) {
-    $permitted = $permitted && user_access('delete users with role '. $role);
+    $permitted = $permitted && user_access('delete users with role id '. $rid);
   }
   return $permitted;
 }
