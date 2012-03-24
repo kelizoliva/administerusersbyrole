@@ -5,6 +5,9 @@
  * Allows users with 'administer users' permission and a role (specified in 'Permissions') to edit/delete other users with a specified role.  If the user being edited has multiple roles, the user doing the editing must have permission to edit ALL of the user being edited's roles.  Also provides control over user creation.  Works well in conjunction with <a href='http://drupal.org/project/role_delegation'>role_delegation</a>.
  */
 
+/**
+ * Implements hook_perm().
+ */
 function administerusersbyrole_perm() {
   $roles = db_query('SELECT name FROM {role} WHERE rid > 2 ORDER BY name');
   $perms = array();
@@ -16,6 +19,9 @@ function administerusersbyrole_perm() {
   return $perms;
 }
 
+/**
+ * Implements hook_init().
+ */
 function administerusersbyrole_init() {
   $items = array();
   if (arg(0)==='admin' && arg(1)==='user' && arg(2)==='user' && arg(3)==='create') {
@@ -24,7 +30,7 @@ function administerusersbyrole_init() {
       drupal_goto("");
     }
   }
-  else if (arg(0)==='user') {
+  elseif (arg(0)==='user') {
     switch (arg(2)) {
       case 'edit':
         $uid = arg(1);
@@ -90,6 +96,9 @@ function _administerusersbyrole_can_delete_user($account) {
   return TRUE;
 }
 
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
 function administerusersbyrole_form_user_multiple_delete_confirm_alter(&$form, &$form_state) {
   $anyallowed = FALSE;
   foreach (array_filter($form_state['post']['accounts']) as $uid => $value) {
@@ -108,12 +117,15 @@ function administerusersbyrole_form_user_multiple_delete_confirm_alter(&$form, &
   }
 }
 
+/**
+ * Implements hook_user().
+ */
 function administerusersbyrole_user($op, &$edit, &$account, $category = NULL) {
   if ($op === 'update' && $category === 'account') {
     if (!_administerusersbyrole_can_edit_user($account)) {
       if (isset($edit['status'])) {
         $action = $edit['status'] ? t('unblock') : t('block');
-        drupal_set_message(t('You do not have permission to !action %user.', array('!action' => $action, '%user' => $account->name)), 'error');
+        drupal_set_message(t('You do not have permission to @action %user.', array('@action' => $action, '%user' => $account->name)), 'error');
         unset($edit['status']);
       }
     }
