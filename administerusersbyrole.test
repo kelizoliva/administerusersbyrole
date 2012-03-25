@@ -45,10 +45,10 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'access administration pages',
       'access content',
       'administer users',
-      "edit users with role $roleName",
+      _administerusersbyrole_build_perm_string($roleName, 'edit', FALSE),
     );
     if ($allowEditorToDelete)
-      $perms[] = "delete users with role $roleName";
+      $perms[] = _administerusersbyrole_build_perm_string($roleName, 'delete', FALSE);
     $this->roles["{$roleName}_editor"] = $this->drupalCreateRole($perms, "{$roleName}_editor");
     $this->createUserWithRole("{$roleName}_editor", array("{$roleName}_editor"));
   }
@@ -70,7 +70,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'access administration pages',
       'access content',
       'administer users',
-      'edit users with role alpha and other roles',
+      _administerusersbyrole_build_perm_string('alpha', 'edit', TRUE),
     );
     $this->checkPermissions(array(), TRUE);
     $this->roles['alpha_o_ed'] = $this->drupalCreateRole($perms, 'alpha_o_ed');
@@ -81,7 +81,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'access administration pages',
       'access content',
       'administer users',
-      'delete users with role alpha and other roles',
+      _administerusersbyrole_build_perm_string('alpha', 'delete', TRUE),
     );
     $this->checkPermissions(array(), TRUE);
     $this->roles['alpha_o_del'] = $this->drupalCreateRole($perms, 'alpha_o_del');
@@ -94,7 +94,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'access administration pages',
       'access content',
       'administer users',
-      'edit users with role beta and other roles',
+      _administerusersbyrole_build_perm_string('beta', 'edit', TRUE),
     );
     $this->checkPermissions(array(), TRUE);
     $this->roles['beta_o_ed'] = $this->drupalCreateRole($perms, 'beta_o_ed');
@@ -110,7 +110,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'edit users with no custom roles',
     );
     foreach ($this->roles as $roleName => $roleID)
-      $perms[] = "edit users with role $roleName";
+      $perms[] = _administerusersbyrole_build_perm_string($roleName, 'edit', FALSE);
     $this->checkPermissions(array(), TRUE);
     $this->roles['all_editor'] = $this->drupalCreateRole($perms, 'all_editor');
     $this->createUserWithRole('all_editor', array('all_editor'));
@@ -123,7 +123,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'delete users with no custom roles',
     );
     foreach ($this->roles as $roleName => $roleID)
-      $perms[] = "delete users with role $roleName";
+      $perms[] = _administerusersbyrole_build_perm_string($roleName, 'delete', FALSE);
     $this->checkPermissions(array(), TRUE);
     $this->roles['all_deletor'] = $this->drupalCreateRole($perms, 'all_deletor');
     $this->createUserWithRole('all_deletor', array('all_deletor'));
