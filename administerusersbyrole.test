@@ -61,6 +61,8 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
     // make sure our immediate dependencies are enabled, since parent::setUp() doesn't check this for us
     $this->assertTrue(module_exists('administerusersbyrole'), "administerusersbyrole.module isn't installed");
 
+    $this->createUserWithRole('noroles', array());
+
     $this->createRolesAndUsers('alpha', FALSE);
 
     $this->createRolesAndUsers('beta', TRUE);
@@ -72,6 +74,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'access administration pages',
       'access content',
       'administer users',
+      'edit users with no custom roles',
     );
     foreach ($this->roles as $roleName => $roleID)
       $perms[] = "edit users with role $roleName";
@@ -84,6 +87,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'access administration pages',
       'access content',
       'administer users',
+      'delete users with no custom roles',
     );
     foreach ($this->roles as $roleName => $roleID)
       $perms[] = "delete users with role $roleName";
@@ -108,6 +112,19 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       // When I'm logged in as...
       'nobody' => array(
         // ...I can perform these actions on this other user...
+        'noroles'      => array('edit' => FALSE, 'delete' => FALSE),
+        'alpha'        => array('edit' => FALSE, 'delete' => FALSE),
+        'alpha_editor' => array('edit' => FALSE, 'delete' => FALSE),
+        'beta'         => array('edit' => FALSE, 'delete' => FALSE),
+        'beta_editor'  => array('edit' => FALSE, 'delete' => FALSE),
+        'alphabeta'    => array('edit' => FALSE, 'delete' => FALSE),
+        'creator'      => array('edit' => FALSE, 'delete' => FALSE),
+        'all_editor'   => array('edit' => FALSE, 'delete' => FALSE),
+        'all_deletor'  => array('edit' => FALSE, 'delete' => FALSE),
+        'create users' => FALSE,
+      ),
+      'noroles' => array(
+        'noroles'      => array('edit' => TRUE,  'delete' => FALSE),
         'alpha'        => array('edit' => FALSE, 'delete' => FALSE),
         'alpha_editor' => array('edit' => FALSE, 'delete' => FALSE),
         'beta'         => array('edit' => FALSE, 'delete' => FALSE),
@@ -119,6 +136,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'alpha' => array(
+        'noroles'      => array('edit' => FALSE, 'delete' => FALSE),
         'alpha'        => array('edit' => TRUE,  'delete' => FALSE),
         'alpha_editor' => array('edit' => FALSE, 'delete' => FALSE),
         'beta'         => array('edit' => FALSE, 'delete' => FALSE),
@@ -130,6 +148,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'alpha_editor' => array(
+        'noroles'      => array('edit' => FALSE, 'delete' => FALSE),
         'alpha'        => array('edit' => TRUE,  'delete' => FALSE),
         'alpha_editor' => array('edit' => TRUE,  'delete' => FALSE),
         'beta'         => array('edit' => FALSE, 'delete' => FALSE),
@@ -141,6 +160,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'beta' => array(
+        'noroles'      => array('edit' => FALSE, 'delete' => FALSE),
         'alpha'        => array('edit' => FALSE, 'delete' => FALSE),
         'alpha_editor' => array('edit' => FALSE, 'delete' => FALSE),
         'beta'         => array('edit' => TRUE,  'delete' => FALSE),
@@ -152,6 +172,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'beta_editor' => array(
+        'noroles'      => array('edit' => FALSE, 'delete' => FALSE),
         'alpha'        => array('edit' => FALSE, 'delete' => FALSE),
         'alpha_editor' => array('edit' => FALSE, 'delete' => FALSE),
         'beta'         => array('edit' => TRUE,  'delete' => TRUE),
@@ -163,6 +184,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'alphabeta' => array(
+        'noroles'      => array('edit' => FALSE, 'delete' => FALSE),
         'alpha'        => array('edit' => FALSE, 'delete' => FALSE),
         'alpha_editor' => array('edit' => FALSE, 'delete' => FALSE),
         'beta'         => array('edit' => FALSE, 'delete' => FALSE),
@@ -174,6 +196,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'all_editor' => array(
+        'noroles'      => array('edit' => TRUE,  'delete' => FALSE),
         'alpha'        => array('edit' => TRUE,  'delete' => FALSE),
         'alpha_editor' => array('edit' => TRUE,  'delete' => FALSE),
         'beta'         => array('edit' => TRUE,  'delete' => FALSE),
@@ -185,6 +208,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'all_deletor' => array(
+        'noroles'      => array('edit' => FALSE, 'delete' => TRUE),
         'alpha'        => array('edit' => FALSE, 'delete' => TRUE),
         'alpha_editor' => array('edit' => FALSE, 'delete' => TRUE),
         'beta'         => array('edit' => FALSE, 'delete' => TRUE),
@@ -196,6 +220,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'creator' => array(
+        'noroles'      => array('edit' => FALSE, 'delete' => FALSE),
         'alpha'        => array('edit' => FALSE, 'delete' => FALSE),
         'alpha_editor' => array('edit' => FALSE, 'delete' => FALSE),
         'beta'         => array('edit' => FALSE, 'delete' => FALSE),
@@ -233,8 +258,12 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
               elseif ($operation === 'delete')
                 $this->assertRaw("Are you sure you want to delete the account <em>$editUsername</em>?", "My expectation is that $loginUsername should be able to $operation $editUsername, but it can't.");
             }
-            else
-              $this->assertRaw("You do not have permission to $operation <em>$editUsername</em>.", "My expectation is that $loginUsername shouldn't be able to $operation $editUsername, but it can.");
+            else {
+              $this->assertTrue(
+                strstr($this->drupalGetContent(), "You do not have permission to $operation <em>$editUsername</em>.")
+                || strstr($this->drupalGetContent(), 'You are not authorized to access this page.'),
+                "My expectation is that $loginUsername shouldn't be able to $operation $editUsername, but it can.");
+            }
           }
         }
       }

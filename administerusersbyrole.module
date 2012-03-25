@@ -17,6 +17,8 @@ function administerusersbyrole_perm() {
   $roles = db_query('SELECT name FROM {role} WHERE rid > 2 ORDER BY name');
   $perms = array();
   $perms[] = 'create users';
+  $perms[] = 'edit users with no custom roles';
+  $perms[] = 'delete users with no custom roles';
   while ($role=db_fetch_array($roles)) {
     $perms[] = 'edit users with role '. $role['name'];
     $perms[] = 'delete users with role '. $role['name'];
@@ -74,6 +76,12 @@ function _administerusersbyrole_can_edit_user($account) {
     return FALSE;
   }
 
+  if ($account->roles === array(DRUPAL_AUTHENTICATED_RID => 'authenticated user')) {
+    if (!user_access('edit users with no custom roles')) {
+      return FALSE;
+    }
+  }
+
   foreach ($account->roles as $rid => $role) {
     if ($rid === DRUPAL_AUTHENTICATED_RID) {
       continue;
@@ -88,6 +96,12 @@ function _administerusersbyrole_can_edit_user($account) {
 function _administerusersbyrole_can_delete_user($account) {
   if ($account->uid == 1) {
     return FALSE;
+  }
+
+  if ($account->roles === array(DRUPAL_AUTHENTICATED_RID => 'authenticated user')) {
+    if (!user_access('delete users with no custom roles')) {
+      return FALSE;
+    }
   }
 
   foreach ($account->roles as $rid => $role) {
