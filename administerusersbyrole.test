@@ -61,9 +61,9 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
     // make sure our immediate dependencies are enabled, since parent::setUp() doesn't check this for us
     $this->assertTrue(module_exists('administerusersbyrole'), "administerusersbyrole.module isn't installed");
 
-    $this->createRolesAndUsers('alpha', false);
+    $this->createRolesAndUsers('alpha', FALSE);
 
-    $this->createRolesAndUsers('beta', true);
+    $this->createRolesAndUsers('beta', TRUE);
 
     $this->createUserWithRole('alphabeta', array('alpha', 'beta'));
 
