@@ -19,8 +19,9 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
 
   private function createUserWithRole($userName, $roleNames) {
     $roleIDs = array();
-    foreach ($roleNames as $roleName)
+    foreach ($roleNames as $roleName) {
       $roleIDs[$this->roles[$roleName]] = $this->roles[$roleName];
+    }
     $userInfo = array(
       'name' => $userName,
       'mail' => "$userName@example.com",
@@ -47,8 +48,9 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'administer users',
       _administerusersbyrole_build_perm_string($roleName, 'edit', FALSE),
     );
-    if ($allowEditorToDelete)
+    if ($allowEditorToDelete) {
       $perms[] = _administerusersbyrole_build_perm_string($roleName, 'delete', FALSE);
+    }
     $this->roles["{$roleName}_editor"] = $this->drupalCreateRole($perms, "{$roleName}_editor");
     $this->createUserWithRole("{$roleName}_editor", array("{$roleName}_editor"));
   }
@@ -109,8 +111,9 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'administer users',
       'edit users with no custom roles',
     );
-    foreach ($this->roles as $roleName => $roleID)
+    foreach ($this->roles as $roleName => $roleID) {
       $perms[] = _administerusersbyrole_build_perm_string($roleName, 'edit', FALSE);
+    }
     $this->checkPermissions(array(), TRUE);
     $this->roles['all_editor'] = $this->drupalCreateRole($perms, 'all_editor');
     $this->createUserWithRole('all_editor', array('all_editor'));
@@ -122,8 +125,9 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
       'administer users',
       'delete users with no custom roles',
     );
-    foreach ($this->roles as $roleName => $roleID)
+    foreach ($this->roles as $roleName => $roleID) {
       $perms[] = _administerusersbyrole_build_perm_string($roleName, 'delete', FALSE);
+    }
     $this->checkPermissions(array(), TRUE);
     $this->roles['all_deletor'] = $this->drupalCreateRole($perms, 'all_deletor');
     $this->createUserWithRole('all_deletor', array('all_deletor'));
@@ -342,17 +346,20 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
     );
 
     foreach ($expectations as $loginUsername => $editUsernames) {
-      if ($loginUsername !== 'nobody')
+      if ($loginUsername !== 'nobody') {
         $this->drupalLogin($this->users[$loginUsername]);
+      }
 
       foreach ($editUsernames as $k => $v) {
         if ($k === 'create users') {
           $this->drupalGet("admin/user/user/create");
           $expectedResult = $v;
-          if ($expectedResult)
+          if ($expectedResult) {
             $this->assertRaw('This web page allows administrators to register new users.', "My expectation is that $loginUsername should be able to create users, but it can't.");
-          else
+          }
+          else {
             $this->assertRaw('You do not have permission to create users.', "My expectation is that $loginUsername shouldn't be able to create users, but it can.");
+          }
         }
         else {
           $editUsername = $k;
@@ -361,10 +368,12 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
           foreach ($operations as $operation => $expectedResult) {
             $this->drupalGet("user/$editUid/$operation");
             if ($expectedResult) {
-              if ($operation === 'edit')
+              if ($operation === 'edit') {
                 $this->assertRaw("All e-mails from the system will be sent to this address.", "My expectation is that $loginUsername should be able to $operation $editUsername, but it can't.");
-              elseif ($operation === 'delete')
+              }
+              elseif ($operation === 'delete') {
                 $this->assertRaw("Are you sure you want to delete the account <em>$editUsername</em>?", "My expectation is that $loginUsername should be able to $operation $editUsername, but it can't.");
+              }
             }
             else {
               $this->assertTrue(
@@ -376,8 +385,9 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         }
       }
 
-      if ($loginUsername !== 'nobody')
+      if ($loginUsername !== 'nobody') {
         $this->drupalLogout();
+      }
     }
   }
 }

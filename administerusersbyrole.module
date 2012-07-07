@@ -11,8 +11,8 @@
  */
 
 /**
-  * Implements hook_permission().
-  */
+ * Implements hook_permission().
+ */
 function administerusersbyrole_permission() {
   $roles = user_roles();
   $perms = array();
@@ -45,16 +45,16 @@ function administerusersbyrole_menu_alter(&$items) {
 }
 
 /**
-  * Implements hook_init().
-  */
+ * Implements hook_init().
+ */
 function administerusersbyrole_init() {
-  if (arg(0)==='admin'&& arg(2)==='people' && arg(3)==='create') {
+  if (arg(0) === 'admin' && arg(2) === 'people' && arg(3) === 'create') {
     if (!user_access('create users')) {
       drupal_set_message(t('You do not have permission to create users.'), 'error');
       drupal_goto("");
     }
   }
-  else if (arg(0)==='user') {
+  else if (arg(0) === 'user') {
     switch (arg(2)) {
       case 'edit':
         $uid = arg(1);
@@ -62,7 +62,7 @@ function administerusersbyrole_init() {
 
         if (!_administerusersbyrole_can_edit_user($account)) {
           drupal_set_message(t('You do not have permission to edit %user.', array('%user' => $account->name)), 'error');
-          drupal_goto('user/'. $account->uid);
+          drupal_goto('user/' . $account->uid);
         }
         break;
 
@@ -72,7 +72,7 @@ function administerusersbyrole_init() {
 
         if (!_administerusersbyrole_can_delete_user($account)) {
           drupal_set_message(t('You do not have permission to delete %user.', array('%user' => $account->name)), 'error');
-          drupal_goto('user/'. $account->uid);
+          drupal_goto('user/' . $account->uid);
         }
 
         break;
@@ -160,8 +160,8 @@ function administerusersbyrole_form_user_multiple_delete_confirm_alter(&$form, &
 }
 
 /**
-  * Implements hook_user_update().
-  */
+ * Implements hook_user_update().
+ */
 function administerusersbyrole_user_update(&$edit, $account, $category) {
   if ($category === 'account') {
     if (!_administerusersbyrole_can_edit_user($account)) {
