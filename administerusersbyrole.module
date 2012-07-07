@@ -5,7 +5,7 @@
  * Provides fine-grained permissions for creating, editing, and deleting users.
  *
  * This module allows site builders to set up fine-grained permissions for
- * allowing users to edit and delete other users Ñ more specific than
+ * allowing users to edit and cancel other users Ñ more specific than
  * Drupal Core's all-or-nothing 'administer users' permission.  It also
  * provides and enforces a 'create users' permission.
  */
@@ -18,15 +18,15 @@ function administerusersbyrole_permission() {
   $perms = array();
   $perms['create users'] = array('title' => 'Create new users');
   $perms['edit users with no custom roles'] = array('title' => 'Edit users with no custom roles');
-  $perms['delete users with no custom roles'] = array('title' => 'Delete users with no custom roles');
+  $perms['cancel users with no custom roles'] = array('title' => 'Cancel users with no custom roles');
   foreach ($roles as $rid => $role) {
-    foreach (array('edit', 'delete') as $op) {
-      // edit/delete x.
+    foreach (array('edit', 'cancel') as $op) {
+      // edit/cancel x.
       $perm_string = _administerusersbyrole_build_perm_string($role, $op, FALSE);
       $perm_title = ucfirst($perm_string);
       $perms[$perm_string] = array('title' => $perm_title);
 
-      // edit/delete $op x and other.
+      // edit/cancel $op x and other.
       $perm_string = _administerusersbyrole_build_perm_string($role, $op, TRUE);
       $perm_title = ucfirst($perm_string);
       $perms[$perm_string] = array('title' => $perm_title);
@@ -41,8 +41,8 @@ function administerusersbyrole_permission() {
 function administerusersbyrole_menu_alter(&$items) {
   $items['user/%user/edit']['access callback'] = '_administerusersbyrole_can_edit_user';
   $items['user/%user/edit']['access arguments'] = array(1);
-  $items['user/%user/delete']['access callback'] = '_administerusersbyrole_can_delete_user';
-  $items['user/%user/delete']['access arguments'] = array(1);
+  $items['user/%user/cancel']['access callback'] = '_administerusersbyrole_can_cancel_user';
+  $items['user/%user/cancel']['access arguments'] = array(1);
   $items['admin/people/create']['access arguments'] = array('create users');
 }
 
@@ -62,12 +62,12 @@ function administerusersbyrole_init() {
         }
         break;
 
-      case 'delete':
+      case 'cancel':
         $uid = arg(1);
         $account = user_load($uid);
 
-        if (!_administerusersbyrole_can_delete_user($account)) {
-          drupal_set_message(t('You do not have permission to delete %user.', array('%user' => $account->name)), 'error');
+        if (!_administerusersbyrole_can_cancel_user($account)) {
+          drupal_set_message(t('You do not have permission to cancel %user.', array('%user' => $account->name)), 'error');
           drupal_goto('user/' . $account->uid);
         }
         break;
@@ -107,13 +107,13 @@ function _administerusersbyrole_can_edit_user($account) {
   return $allow;
 }
 
-function _administerusersbyrole_can_delete_user($account) {
+function _administerusersbyrole_can_cancel_user($account) {
   if ($account->uid == 1) {
     return FALSE;
   }
 
   if ($account->roles === array(DRUPAL_AUTHENTICATED_RID => 'authenticated user')) {
-    if (!user_access('delete users with no custom roles')) {
+    if (!user_access('cancel users with no custom roles')) {
       return FALSE;
     }
   }
@@ -123,10 +123,10 @@ function _administerusersbyrole_can_delete_user($account) {
     if ($rid === DRUPAL_AUTHENTICATED_RID) {
       continue;
     }
-    if (user_access(_administerusersbyrole_build_perm_string($role, 'delete', TRUE))) {
+    if (user_access(_administerusersbyrole_build_perm_string($role, 'cancel', TRUE))) {
       return TRUE;
     }
-    if (!user_access(_administerusersbyrole_build_perm_string($role, 'delete', FALSE))) {
+    if (!user_access(_administerusersbyrole_build_perm_string($role, 'cancel', FALSE))) {
       $allow = FALSE;
     }
   }
@@ -136,15 +136,15 @@ function _administerusersbyrole_can_delete_user($account) {
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function administerusersbyrole_form_user_multiple_delete_confirm_alter(&$form, &$form_state) {
+function administerusersbyrole_form_user_multiple_cancel_confirm_alter(&$form, &$form_state) {
   $anyallowed = FALSE;
   foreach (array_filter($form_state['post']['accounts']) as $uid => $value) {
     $account = user_load($uid);
-    if (_administerusersbyrole_can_delete_user($account)) {
+    if (_administerusersbyrole_can_cancel_user($account)) {
       $anyallowed = TRUE;
     }
     else {
-      drupal_set_message(t('You do not have permission to delete %user.', array('%user' => $account->name)), 'error');
+      drupal_set_message(t('You do not have permission to cancel %user.', array('%user' => $account->name)), 'error');
       unset($form_state['post']['accounts'][$uid]);
       unset($form['accounts'][$uid]);
     }
