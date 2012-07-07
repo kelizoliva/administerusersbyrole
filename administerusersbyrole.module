@@ -40,7 +40,9 @@ function administerusersbyrole_permission() {
  */
 function administerusersbyrole_menu_alter(&$items) {
   $items['user/%user/edit']['access callback'] = '_administerusersbyrole_can_edit_user';
+  $items['user/%user/edit']['access arguments'] = array(1);
   $items['user/%user/delete']['access callback'] = '_administerusersbyrole_can_delete_user';
+  $items['user/%user/delete']['access arguments'] = array(1);
   $items['admin/people/create']['access arguments'] = array('create users');
 }
 
@@ -48,13 +50,7 @@ function administerusersbyrole_menu_alter(&$items) {
  * Implements hook_init().
  */
 function administerusersbyrole_init() {
-  if (arg(0) === 'admin' && arg(2) === 'people' && arg(3) === 'create') {
-    if (!user_access('create users')) {
-      drupal_set_message(t('You do not have permission to create users.'), 'error');
-      drupal_goto("");
-    }
-  }
-  else if (arg(0) === 'user') {
+  if (arg(0) === 'user') {
     switch (arg(2)) {
       case 'edit':
         $uid = arg(1);
@@ -74,7 +70,6 @@ function administerusersbyrole_init() {
           drupal_set_message(t('You do not have permission to delete %user.', array('%user' => $account->name)), 'error');
           drupal_goto('user/' . $account->uid);
         }
-
         break;
     }
   }
