@@ -158,6 +158,9 @@ function administerusersbyrole_form_user_multiple_cancel_confirm_alter(&$form, &
  * Implements hook_user_update().
  */
 function administerusersbyrole_user_update(&$edit, $account, $category) {
+  if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'install') {
+    return;
+  }
   if ($category === 'account') {
     if (!_administerusersbyrole_can_edit_user($account)) {
       if (isset($edit['status'])) {
