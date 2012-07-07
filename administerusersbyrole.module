@@ -21,12 +21,15 @@ function administerusersbyrole_permission() {
   $perms['delete users with no custom roles'] = array('title' => 'Delete users with no custom roles');
   foreach ($roles as $rid => $role) {
     foreach (array('edit', 'delete') as $op) {
-      // $op x.
-      $perm_string = _administerusersbyrole_build_perm_string($role['name'], $op, FALSE);
+      // edit/delete x.
+      $perm_string = _administerusersbyrole_build_perm_string($role, $op, FALSE);
       $perm_title = ucfirst($perm_string);
-      // $op x and other.
-      $perm_string = _administerusersbyrole_build_perm_string($role['name'], $op, TRUE);
+      $perms[$perm_string] = array('title' => $perm_title);
+
+      // edit/delete $op x and other.
+      $perm_string = _administerusersbyrole_build_perm_string($role, $op, TRUE);
       $perm_title = ucfirst($perm_string);
+      $perms[$perm_string] = array('title' => $perm_title);
     }
   }
   return $perms;
