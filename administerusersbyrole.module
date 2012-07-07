@@ -11,42 +11,52 @@
  */
 
 /**
- * Implements hook_perm().
- */
-function administerusersbyrole_perm() {
-  $roles = db_query('SELECT name FROM {role} WHERE rid > 2 ORDER BY name');
+  * Implements hook_permission().
+  */
+function administerusersbyrole_permission() {
+  $roles = user_roles();
   $perms = array();
-  $perms[] = 'create users';
-  $perms[] = 'edit users with no custom roles';
-  $perms[] = 'delete users with no custom roles';
-  while ($role=db_fetch_array($roles)) {
-    $perms[] = _administerusersbyrole_build_perm_string($role['name'], 'edit', FALSE);
-    $perms[] = _administerusersbyrole_build_perm_string($role['name'], 'edit', TRUE);
-    $perms[] = _administerusersbyrole_build_perm_string($role['name'], 'delete', FALSE);
-    $perms[] = _administerusersbyrole_build_perm_string($role['name'], 'delete', TRUE);
+  $perms['create users'] = array('title' => 'Create new users');
+  $perms['edit users with no custom roles'] = array('title' => 'Edit users with no custom roles');
+  $perms['delete users with no custom roles'] = array('title' => 'Delete users with no custom roles');
+  foreach ($roles as $rid => $role) {
+    foreach (array('edit', 'delete') as $op) {
+      // $op x.
+      $perm_string = _administerusersbyrole_build_perm_string($role['name'], $op, FALSE);
+      $perm_title = ucfirst($perm_string);
+      // $op x and other.
+      $perm_string = _administerusersbyrole_build_perm_string($role['name'], $op, TRUE);
+      $perm_title = ucfirst($perm_string);
+    }
   }
   return $perms;
 }
 
 /**
- * Implements hook_init().
+ * Implements hook_menu_alter().
  */
+function administerusersbyrole_menu_alter(&$items) {
+  $items['user/%user/edit']['access callback'] = '_administerusersbyrole_can_edit_user';
+  $items['user/%user/delete']['access callback'] = '_administerusersbyrole_can_delete_user';
+  $items['admin/people/create']['access arguments'] = array('create users');
+}
+
+/**
+  * Implements hook_init().
+  */
 function administerusersbyrole_init() {
-  $items = array();
-  if (arg(0)==='admin' && arg(1)==='user' && arg(2)==='user' && arg(3)==='create') {
+  if (arg(0)==='admin'&& arg(2)==='people' && arg(3)==='create') {
     if (!user_access('create users')) {
       drupal_set_message(t('You do not have permission to create users.'), 'error');
       drupal_goto("");
     }
   }
-  elseif (arg(0)==='user') {
-    $uid = arg(1);
-    if (module_exists('me')) {
-      $uid = _me_check_arg($uid);
-    }
-    $account = user_load( array('uid' => $uid) );
+  else if (arg(0)==='user') {
     switch (arg(2)) {
       case 'edit':
+        $uid = arg(1);
+        $account = user_load($uid);
+
         if (!_administerusersbyrole_can_edit_user($account)) {
           drupal_set_message(t('You do not have permission to edit %user.', array('%user' => $account->name)), 'error');
           drupal_goto('user/'. $account->uid);
@@ -54,14 +64,17 @@ function administerusersbyrole_init() {
         break;
 
       case 'delete':
+        $uid = arg(1);
+        $account = user_load($uid);
+
         if (!_administerusersbyrole_can_delete_user($account)) {
           drupal_set_message(t('You do not have permission to delete %user.', array('%user' => $account->name)), 'error');
           drupal_goto('user/'. $account->uid);
         }
+
         break;
     }
   }
-  return $items;
 }
 
 function _administerusersbyrole_can_edit_user($account) {
@@ -144,14 +157,14 @@ function administerusersbyrole_form_user_multiple_delete_confirm_alter(&$form, &
 }
 
 /**
- * Implements hook_user().
- */
-function administerusersbyrole_user($op, &$edit, &$account, $category = NULL) {
-  if ($op === 'update' && $category === 'account') {
+  * Implements hook_user_update().
+  */
+function administerusersbyrole_user_update(&$edit, $account, $category) {
+  if ($category === 'account') {
     if (!_administerusersbyrole_can_edit_user($account)) {
       if (isset($edit['status'])) {
         $action = $edit['status'] ? t('unblock') : t('block');
-        drupal_set_message(t('You do not have permission to @action %user.', array('@action' => $action, '%user' => $account->name)), 'error');
+        drupal_set_message(t('You do not have permission to !action %user.', array('!action' => $action, '%user' => $account->name)), 'error');
         unset($edit['status']);
       }
     }
