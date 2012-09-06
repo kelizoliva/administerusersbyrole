@@ -46,35 +46,6 @@ function administerusersbyrole_menu_alter(&$items) {
   $items['admin/people/create']['access arguments'] = array('create users');
 }
 
-/**
- * Implements hook_init().
- */
-function administerusersbyrole_init() {
-  if (arg(0) === 'user') {
-    switch (arg(2)) {
-      case 'edit':
-        $uid = arg(1);
-        $account = user_load($uid);
-
-        if (!_administerusersbyrole_can_edit_user($account)) {
-          drupal_set_message(t('You do not have permission to edit %user.', array('%user' => $account->name)), 'error');
-          drupal_goto('user/' . $account->uid);
-        }
-        break;
-
-      case 'cancel':
-        $uid = arg(1);
-        $account = user_load($uid);
-
-        if (!_administerusersbyrole_can_cancel_user($account)) {
-          drupal_set_message(t('You do not have permission to cancel %user.', array('%user' => $account->name)), 'error');
-          drupal_goto('user/' . $account->uid);
-        }
-        break;
-    }
-  }
-}
-
 function _administerusersbyrole_can_edit_user($account) {
   global $user;
   if ($account->uid == $user->uid) {
@@ -151,24 +122,6 @@ function administerusersbyrole_form_user_multiple_cancel_confirm_alter(&$form, &
   }
   if (!$anyallowed) {
     drupal_goto( drupal_substr($form['#action'], 1) );
-  }
-}
-
-/**
- * Implements hook_user_update().
- */
-function administerusersbyrole_user_update(&$edit, $account, $category) {
-  if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'install') {
-    return;
-  }
-  if ($category === 'account') {
-    if (!_administerusersbyrole_can_edit_user($account)) {
-      if (isset($edit['status'])) {
-        $action = $edit['status'] ? t('unblock') : t('block');
-        drupal_set_message(t('You do not have permission to !action %user.', array('!action' => $action, '%user' => $account->name)), 'error');
-        unset($edit['status']);
-      }
-    }
   }
 }
 
