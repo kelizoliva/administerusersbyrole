@@ -57,6 +57,12 @@ function _administerusersbyrole_can_edit_user($account) {
     return FALSE;
   }
 
+  // We mave been passed a mock account object. If so, load the user to ensure
+  // that we have roles to check against.
+  if (!$account->roles) {
+    $account = user_load($account->uid);
+  }
+
   if ($account->roles === array(DRUPAL_AUTHENTICATED_RID => 'authenticated user')) {
     if (!user_access('edit users with no custom roles')) {
       return FALSE;
@@ -135,4 +141,14 @@ function _administerusersbyrole_build_perm_string($role_name, $op = 'edit', $oth
     $perm .= ' and other roles';
   }
   return $perm;
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function administerusersbyrole_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'administerusersbyrole') . '/views',
+  );
 }

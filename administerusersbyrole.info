@@ -3,3 +3,5 @@ description = "Allows users with 'administer users' permission and a role (speci
 core = 7.x
 
 files[] = administerusersbyrole.test
+files[] = views/administerusersbyrole_handler_field_user_link_edit.inc
+files[] = views/administerusersbyrole_handler_field_user_link_cancel.inc
