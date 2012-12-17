@@ -59,7 +59,7 @@ function _administerusersbyrole_can_edit_user($account) {
 
   // We mave been passed a mock account object. If so, load the user to ensure
   // that we have roles to check against.
-  if (!$account->roles) {
+  if (!isset($account->roles)) {
     $account = user_load($account->uid);
   }
 
@@ -87,6 +87,12 @@ function _administerusersbyrole_can_edit_user($account) {
 function _administerusersbyrole_can_cancel_user($account) {
   if ($account->uid == 1) {
     return FALSE;
+  }
+
+  // We mave been passed a mock account object. If so, load the user to ensure
+  // that we have roles to check against.
+  if (!isset($account->roles)) {
+    $account = user_load($account->uid);
   }
 
   if ($account->roles === array(DRUPAL_AUTHENTICATED_RID => 'authenticated user')) {
