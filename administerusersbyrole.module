@@ -138,6 +138,25 @@ function administerusersbyrole_form_user_multiple_cancel_confirm_alter(&$form, &
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Make the user edit form consider our permissions when determining which
+ * elements should be visible to administrators.
+ */
+function administerusersbyrole_form_user_profile_form_alter(&$form, &$form_state) {
+  global $user;
+
+  $account = $form['#user'];
+  $register = ($form['#user']->uid > 0 ? FALSE : TRUE);
+
+  $admin = _administerusersbyrole_can_edit_user($account);
+  $admin = !empty($admin) ? TRUE : user_access('administer users');
+
+  $form['account']['name']['#access'] = ($register || ($user->uid == $account->uid && user_access('change own username')) || $admin);
+  $form['account']['status']['#access'] = $admin;
+}
+
+/**
  * Generates a permission string for a given a role name.
  */
 function _administerusersbyrole_build_perm_string($role_name, $op = 'edit', $other = FALSE) {
