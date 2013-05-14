@@ -153,7 +153,7 @@ function administerusersbyrole_form_user_profile_form_alter(&$form, &$form_state
   $admin = !empty($admin) ? TRUE : user_access('administer users');
 
   $form['account']['name']['#access'] = ($register || ($user->uid == $account->uid && user_access('change own username')) || $admin);
-  $form['account']['status']['#access'] = $admin;
+  $form['account']['status']['#access'] = ($account->uid == $user->uid) ?  $form['account']['status']['#access'] : $admin;
 }
 
 /**
