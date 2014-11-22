@@ -8,6 +8,8 @@
 /**
  * Field handler to present a link to user cancel.
  *
+ * Identical to the base class except change call to user_cancel_access() for _administerusersbyrole_can_cancel_user().
+ *
  * @ingroup views_field_handlers
  */
 class administerusersbyrole_handler_field_user_link_cancel extends views_handler_field_user_link_cancel {
@@ -19,10 +21,10 @@ class administerusersbyrole_handler_field_user_link_cancel extends views_handler
     $account = new stdClass();
     $account->uid = $uid;
 
-    if ($uid && (user_cancel_access($account) || _administerusersbyrole_can_cancel_user($account))) {
+    if ($uid && _administerusersbyrole_can_cancel_user($account)) {
       $this->options['alter']['make_link'] = TRUE;
 
-      $text = !empty($this->options['text']) ? $this->options['text'] : t('cancel');
+      $text = !empty($this->options['text']) ? $this->options['text'] : t('Cancel account');
 
       $this->options['alter']['path'] = "user/$uid/cancel";
       $this->options['alter']['query'] = drupal_get_destination();
