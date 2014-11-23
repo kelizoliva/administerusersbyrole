@@ -72,58 +72,31 @@ function _administerusersbyrole_can_view_user($account) {
 
 /**
  * Determine access to edit the specified user account.
+ *
+ * If as_admin is set, then determine if there is admin access (i.e. don't take into account
+ * the default access everyone has to edit their own account).  Without admin access, users
+ * can't necesarily change their own username and can't block their account.
  */
 function _administerusersbyrole_can_edit_user($account) {
-  if (user_edit_access($account)) {
-    return TRUE;
-  }
+  return user_edit_access($account) || _administerusersbyrole_check_access($account, 'edit');
+}
 
-  // Never allow uid 0 (anonymous) or 1 (master admin).
-  if ($account->uid <= 1) {
-    return FALSE;
-  }
-
-  // We may have been passed a mock account object. If so, load the user to ensure
-  // that we have roles to check against.
-  if (!isset($account->roles)) {
-    $account = user_load($account->uid);
-  }
-
-  foreach ($account->roles as $rid => $role) {
-    if (!user_access(_administerusersbyrole_build_perm_string($rid, 'edit'))) {
-      return FALSE;
-    }
-  }
-
-  return TRUE;
+/**
+ * Determine access to administrator edit the specified user account.
+ *
+ * This is the same as _administerusersbyrole_can_edit_user, except it does not automatically
+ * return true for a user's own account.  Without admin access, users
+ * can't necesarily change their own username and can't block their account.
+ */
+function _administerusersbyrole_can_admin_user($account) {
+  return user_access('administer users') || _administerusersbyrole_check_access($account, 'edit');
 }
 
 /**
  * Determine access to cancel the specified user account.
  */
 function _administerusersbyrole_can_cancel_user($account) {
-  if (user_cancel_access($account)) {
-    return TRUE;
-  }
-
-  // Never allow uid 0 (anonymous) or 1 (master admin).
-  if ($account->uid <= 1) {
-    return FALSE;
-  }
-
-  // We may have been passed a mock account object. If so, load the user to ensure
-  // that we have roles to check against.
-  if (!isset($account->roles)) {
-    $account = user_load($account->uid);
-  }
-
-  foreach ($account->roles as $rid => $role) {
-    if (!user_access(_administerusersbyrole_build_perm_string($rid, 'cancel'))) {
-      return FALSE;
-    }
-  }
-
-  return TRUE;
+  return user_cancel_access($account) || _administerusersbyrole_check_access($account, 'cancel');
 }
 
 /**
@@ -163,7 +136,7 @@ function administerusersbyrole_form_user_admin_account_alter(&$form, &$form_stat
     // when having cancel permission but no edit permission.
     foreach ($form['accounts']['#options'] as $uid => $fields) {
       $account = user_load($uid);
-      if (!_administerusersbyrole_can_edit_user($account)) {
+      if (!_administerusersbyrole_can_admin_user($account)) {
         unset($form['accounts']['#options'][$uid]);
       }
     }
@@ -203,14 +176,41 @@ function administerusersbyrole_form_user_multiple_cancel_confirm_alter(&$form, &
 function administerusersbyrole_form_user_profile_form_alter(&$form, &$form_state) {
   $account = $form['#user'];
 
-  if (_administerusersbyrole_can_edit_user($account)) {
-  $form['account']['name']['#access'] = TRUE;
+  if (_administerusersbyrole_can_admin_user($account)) {
+    $form['account']['name']['#access'] = TRUE;
     $form['account']['status']['#access'] = TRUE;
   }
   
   if (_administerusersbyrole_can_cancel_user($account)) {
     $form['actions']['cancel']['#access'] = TRUE;
   }
+}
+
+/**
+ * Check access to perform an operation on an account.
+ *
+ * This function checks the permissions of this module only.  The calling code needs
+ * to check any Drupal core permissions that should also allow access.
+ */
+function _administerusersbyrole_check_access($account, $op) {
+  // Never allow uid 0 (anonymous) or 1 (master admin).
+  if ($account->uid <= 1) {
+    return FALSE;
+  }
+
+  // We may have been passed a mock account object. If so, load the user to ensure
+  // that we have roles to check against.
+  if (!isset($account->roles)) {
+    $account = user_load($account->uid);
+  }
+
+  foreach ($account->roles as $rid => $role) {
+    if (!user_access(_administerusersbyrole_build_perm_string($rid, $op))) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
 }
 
 /**
