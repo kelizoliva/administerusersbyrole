@@ -71,24 +71,9 @@ function _administerusersbyrole_can_view_user($account) {
 
 /**
  * Determine access to edit the specified user account.
- *
- * If as_admin is set, then determine if there is admin access (i.e. don't take into account
- * the default access everyone has to edit their own account).  Without admin access, users
- * can't necesarily change their own username and can't block their account.
  */
 function _administerusersbyrole_can_edit_user($account) {
   return user_edit_access($account) || _administerusersbyrole_check_access($account, 'edit');
-}
-
-/**
- * Determine access to administrator edit the specified user account.
- *
- * This is the same as _administerusersbyrole_can_edit_user, except it does not automatically
- * return true for a user's own account.  Without admin access, users
- * can't necesarily change their own username and can't block their account.
- */
-function _administerusersbyrole_can_admin_user($account) {
-  return user_access('administer users') || _administerusersbyrole_check_access($account, 'edit');
 }
 
 /**
@@ -117,7 +102,9 @@ function _administerusersbyrole_can_create_users($extra = '') {
  * if required.
  */
 function administerusersbyrole_cancel_confirm_wrapper($account) {
-  if (_administerusersbyrole_can_cancel_user($account)) {
+  // If we are granting permissions, elevate to 'administer users'.
+  // Don't do this for a user cancelling their own account.
+  if (_administerusersbyrole_check_access($account, 'cancel')) {
     _administerusersbyrole_temp_administer_users();
   }
   
@@ -135,7 +122,9 @@ function administerusersbyrole_form_user_admin_account_alter(&$form, &$form_stat
     // when having cancel permission but no edit permission.
     foreach ($form['accounts']['#options'] as $uid => $fields) {
       $account = user_load($uid);
-      if (!_administerusersbyrole_can_admin_user($account)) {
+      // This form exposes operations such as block account that shouldn't be available on a user's own account,
+      // so just check our own permissions. 
+      if (!_administerusersbyrole_check_access($account, 'edit')) {
         unset($form['accounts']['#options'][$uid]);
       }
     }
@@ -152,7 +141,9 @@ function administerusersbyrole_form_user_multiple_cancel_confirm_alter(&$form, &
   $anyallowed = FALSE;
   foreach ($form_state['input']['accounts'] as $uid) {
     $account = user_load($uid);
-    if (_administerusersbyrole_can_cancel_user($account)) {
+    // This form bypasses checks and restrictions present when cancelling the user's own account,
+    // so just check our own permissions. 
+    if (_administerusersbyrole_check_access($account, 'cancel')) {
       $anyallowed = TRUE;
     }
     else {
@@ -175,12 +166,16 @@ function administerusersbyrole_form_user_multiple_cancel_confirm_alter(&$form, &
 function administerusersbyrole_form_user_profile_form_alter(&$form, &$form_state) {
   $account = $form['#user'];
 
-  if (_administerusersbyrole_can_admin_user($account)) {
+  // We just check against this module's own permissions.
+  // Don't check against the permissions in Drupal core, as those checks have already done and are subtle.
+  // (For example, users can't necesarily change their own username and can't block their own account.)
+  
+  if (_administerusersbyrole_check_access($account, 'edit')) {
     $form['account']['name']['#access'] = TRUE;
     $form['account']['status']['#access'] = TRUE;
   }
   
-  if (_administerusersbyrole_can_cancel_user($account)) {
+  if (_administerusersbyrole_check_access($account, 'cancel')) {
     $form['actions']['cancel']['#access'] = TRUE;
   }
 }
