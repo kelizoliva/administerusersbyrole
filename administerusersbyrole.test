@@ -41,14 +41,14 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
 
     // clear permissions cache, so we can use the 'edit users with ...' permission for this role
     $this->checkPermissions(array(), TRUE);
-    // create role to edit above role
+    // create role to edit above role and also anyone with no custom roles.
     $perms = array(
       'access content',
       _administerusersbyrole_build_perm_string(DRUPAL_AUTHENTICATED_RID, 'edit'),
       _administerusersbyrole_build_perm_string($this->roles[$roleName], 'edit'),
     );
     if ($allowEditorToCancel) {
-      $perms[] = _administerusersbyrole_build_perm_string(DRUPAL_AUTHENTICATED_RID, 'cancel');
+      // Don't add in "no custom roles" this time, to give better variety of testing.
       $perms[] = _administerusersbyrole_build_perm_string($this->roles[$roleName], 'cancel');
     }
     $this->roles["{$roleName}_editor"] = $this->drupalCreateRole($perms, "{$roleName}_editor");
@@ -70,9 +70,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
 
     // alphabeta_ed
     $perms = array(
-      'access administration pages',
       'access content',
-      _administerusersbyrole_build_perm_string(DRUPAL_AUTHENTICATED_RID, 'edit'),
       _administerusersbyrole_build_perm_string($this->roles['alpha'], 'edit'),
       _administerusersbyrole_build_perm_string($this->roles['beta'], 'edit'),
     );
@@ -82,7 +80,6 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
 
     // all_editor
     $perms = array(
-      'access administration pages',
       'access content',
       _administerusersbyrole_build_perm_string(DRUPAL_AUTHENTICATED_RID, 'edit'),
     );
@@ -95,7 +92,6 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
 
     // all_deletor
     $perms = array(
-      'access administration pages',
       'access content',
       _administerusersbyrole_build_perm_string(DRUPAL_AUTHENTICATED_RID, 'cancel'),
     );
@@ -108,7 +104,6 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
 
     // creator
     $perms = array(
-      'access administration pages',
       'access content',
       'create users',
     );
@@ -187,7 +182,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'beta_editor' => array(
-        'noroles'      => array('edit' => TRUE,  'cancel' => TRUE),
+        'noroles'      => array('edit' => TRUE,  'cancel' => FALSE),
         'alpha'        => array('edit' => FALSE, 'cancel' => FALSE),
         'alpha_editor' => array('edit' => FALSE, 'cancel' => FALSE),
         'beta'         => array('edit' => TRUE,  'cancel' => TRUE),
@@ -213,7 +208,7 @@ class AdministerUsersByRoleTestCase extends DrupalWebTestCase {
         'create users' => FALSE,
       ),
       'alphabeta_ed' => array(
-        'noroles'      => array('edit' => TRUE,  'cancel' => FALSE),
+        'noroles'      => array('edit' => FALSE, 'cancel' => FALSE),
         'alpha'        => array('edit' => TRUE,  'cancel' => FALSE),
         'alpha_editor' => array('edit' => FALSE, 'cancel' => FALSE),
         'beta'         => array('edit' => TRUE,  'cancel' => FALSE),

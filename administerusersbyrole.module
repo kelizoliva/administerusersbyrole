@@ -15,12 +15,13 @@
  */
 function administerusersbyrole_permission() {
   $roles = user_roles(TRUE);
-  // Exclude the admin role.  Once you can edit an admin, you can set their password, log on and do anything,
+  // Exclude the admin role.  Once you can edit an admin, you can set their password, log in and do anything,
   // which defeats the point of using this module.
   $admin_rid = variable_get('user_admin_role', 0);
   $perms = array();
   $perms['create users'] = array('title' => 'Create new users');
-  
+  $perms['access users overview'] = array('title' => 'Access the users overview page');
+   
   foreach ($roles as $rid => $role) {
     if ($rid == $admin_rid) {
       continue;
@@ -57,10 +58,8 @@ function administerusersbyrole_menu_alter(&$items) {
  * Determine access to the admin/people page.
  */
 function _administerusersbyrole_can_admin_people() {
-  // Access for users who can edit or cancel either by this module or the default user permissions.
-  return user_access(_administerusersbyrole_build_perm_string(DRUPAL_AUTHENTICATED_RID, 'edit')) || 
-    user_access(_administerusersbyrole_build_perm_string(DRUPAL_AUTHENTICATED_RID, 'cancel')) ||
-    user_access('administer users');
+  // Access by this module permission or the one from the user module.
+  return user_access('access users overview') || user_access('administer users');
 }
 
 /**
@@ -205,6 +204,10 @@ function _administerusersbyrole_check_access($account, $op) {
   }
 
   foreach ($account->roles as $rid => $role) {
+    // If there is only DRUPAL_AUTHENTICATED_RID, then we must test for it, otherwise skip it.
+    if (($rid === DRUPAL_AUTHENTICATED_RID) && (count($account->roles) > 1)) {
+      continue;
+    }
     if (!user_access(_administerusersbyrole_build_perm_string($rid, $op))) {
       return FALSE;
     }
