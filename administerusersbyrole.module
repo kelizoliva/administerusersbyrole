@@ -85,6 +85,9 @@ function administerusersbyrole_views_default_views_alter(&$views) {
 function administerusersbyrole_query_alter(QueryAlterableInterface $query) {
   // The tag administerusersbyrole_edit_access is used to indicate that we should filter out users where there isn't edit access.
   if ($query->hasTag('administerusersbyrole_edit_access') && !user_access('administer users')) {
+    // Exclude the root user.
+    $query->condition('users.uid', 1, '<>');
+    
     $roles = user_roles(TRUE);
     foreach ($roles as $rid => $role) {
       if (!user_access(_administerusersbyrole_build_perm_string($rid, 'edit'))) {
@@ -92,7 +95,7 @@ function administerusersbyrole_query_alter(QueryAlterableInterface $query) {
       }
     }
     
-    if ($exclude[DRUPAL_AUTHENTICATED_RID]) {
+    if (isset($exclude[DRUPAL_AUTHENTICATED_RID])) {
       // No permission unless there is a role.
       $query->join('users_roles', 'users_roles_2', 'users_roles_2.uid=users.uid');
       unset($exclude[DRUPAL_AUTHENTICATED_RID]);
