@@ -232,13 +232,13 @@ function administerusersbyrole_metadata_user_access($op, $account = NULL, $check
   }
   
   $convert = array('delete' => 'cancel', 'update' => 'edit');
-  $op = $convert{$op};
-  
-  if (isset($op)) {
+
+  if (isset($convert[$op])) {
     // Call our own function.
     $check_as = isset($check_as) ? $check_as : $GLOBALS['user'];
-    return _administerusersbyrole_check_access($account, $op, $check_as);
+    return _administerusersbyrole_check_access($account, $convert[$op], $check_as);
   }
+
   return FALSE;
 }
 
