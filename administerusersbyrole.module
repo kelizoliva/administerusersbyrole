@@ -224,6 +224,13 @@ function administerusersbyrole_entity_property_info_alter(&$info) {
 
 /**
  * Access callback for the user entity.
+ *
+ * NB the names of variables here are deliberately different from the ones used in the entity module.
+ * The reason is to be consistent with the rest of this module.  In the entity module:
+ * - Parameter 2 is named '$entity'.  Tntity is a user account, which is referred to as $account
+ *   throughout in this module, so we stick with that.
+ * - Parameter 3 is named '$account', meaning the account to check as, which is referred to as $check_as
+ *   in this module.
  */
 function administerusersbyrole_metadata_user_access($op, $account = NULL, $check_as = NULL) {
   // Call the base function.
