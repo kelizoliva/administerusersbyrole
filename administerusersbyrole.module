@@ -205,6 +205,23 @@ function administerusersbyrole_form_user_profile_form_alter(&$form, &$form_state
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Add a wrapper to elevate user permissions during AJAX submissions
+ */
+function administerusersbyrole_form_user_register_form_alter(&$form, &$form_state) {
+  $form_state['wrapper_callback'] = '_administerusersbyrole_user_profile_form_wrapper';
+}
+
+/**
+ * Handler to elevate user permissions when form is reloaded, as by an AJAX submission
+ */
+function _administerusersbyrole_user_profile_form_wrapper($form, &$form_state) {
+  _administerusersbyrole_can_create_users('elevate');
+  return $form;
+}
+
+/**
  * Implements hook_entity_info_alter().
  */
 function administerusersbyrole_entity_info_alter(&$entity_info) {
