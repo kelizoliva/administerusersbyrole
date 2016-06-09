@@ -52,6 +52,13 @@ function administerusersbyrole_menu_alter(&$items) {
   chain_menu_access_chain($items, 'admin/people', 'user_access', array('access users overview'), TRUE);
   // The code in the user module to create a user relies on 'administer users' permission being set, so pass an argument to elevate permissions.
   chain_menu_access_chain($items, 'admin/people/create', '_administerusersbyrole_can_create_users', array('elevate'), TRUE);
+
+  // Compatibility with other contrib modules.
+
+  // If 'password_policy_password_tab' module (a sub-module of 'password_policy') is enabled, then check and update access.
+  if (module_exists('password_policy_password_tab')) {
+    chain_menu_access_chain($items, 'user/%user/password', '_administerusersbyrole_check_access', array(1, 'edit'), TRUE);
+  }
 }
 
 /**
