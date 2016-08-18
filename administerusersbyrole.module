@@ -26,9 +26,21 @@ function administerusersbyrole_permission() {
     if ($rid == $admin_rid) {
       continue;
     }
-    foreach (array('edit', 'cancel') as $op) {
+
+    $ops = array('edit' => t('edit'), 'cancel' => t('cancel'));
+    foreach ($ops as $op => $operation) {
       $perm_string = _administerusersbyrole_build_perm_string($rid, $op);
-      $perm_title = ucfirst(($rid === DRUPAL_AUTHENTICATED_RID) ? "$op users with no custom roles" : "$op users with role $role");
+      if ($rid === DRUPAL_AUTHENTICATED_RID) {
+        $perm_title = drupal_ucfirst(t("@operation users with no custom roles", array(
+          '@operation' => $operation,
+        )));
+      }
+      else {
+        $perm_title = drupal_ucfirst(t("@operation users with role %role", array(
+          '@operation' => $operation,
+          '%role' => $role,
+        )));
+      }
       $perms[$perm_string] = array('title' => $perm_title);
     }
   }
