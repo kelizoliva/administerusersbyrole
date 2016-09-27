@@ -19,10 +19,7 @@ View user profiles
 NEW PERMISSIONS
 
 Access the users overview page
-  See the list of users at admin/people.  Only users the can be edited will
-  be shown.  (This restriction is necessary to ensure that batch operations
-  are safe; in the unusual case of cancel permission but not edit permission,
-  then you could create a View for the sub-admin to have a list of users.)
+  See the list of users at admin/people.  Only users that can be edited are shown.
 
 Create new users
   Create users, at admin/people/create.

@@ -21,13 +21,13 @@ function administerusersbyrole_permission() {
   $perms = array();
   $perms['create users'] = array('title' => 'Create new users');
   $perms['access users overview'] = array('title' => 'Access the users overview page');
+  $ops = array('edit' => t('edit'), 'cancel' => t('cancel'));
 
   foreach ($roles as $rid => $role) {
     if ($rid == $admin_rid) {
       continue;
     }
 
-    $ops = array('edit' => t('edit'), 'cancel' => t('cancel'));
     foreach ($ops as $op => $operation) {
       $perm_string = _administerusersbyrole_build_perm_string($rid, $op);
       if ($rid === DRUPAL_AUTHENTICATED_RID) {
@@ -263,7 +263,7 @@ function administerusersbyrole_entity_property_info_alter(&$info) {
  *
  * NB the names of variables here are deliberately different from the ones used in the entity module.
  * The reason is to be consistent with the rest of this module.  In the entity module:
- * - Parameter 2 is named '$entity'.  Tntity is a user account, which is referred to as $account
+ * - Parameter 2 is named '$entity'.  Entity is a user account, which is referred to as $account
  *   throughout in this module, so we stick with that.
  * - Parameter 3 is named '$account', meaning the account to check as, which is referred to as $check_as
  *   in this module.
