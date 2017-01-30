@@ -27,7 +27,7 @@ Create new users
 Edit users with no custom roles
   Allows editing of any authenticated user that has no custom roles set.
 
-Edit users with no custom roles
+Edit users with role XXX
   Allows editing of any authenticated user with the specified role.
   To edit a user with multiple roles, the sub-admin must have permission to
   edit ALL of those roles.  ("Edit users with no custom roles" is NOT needed.)
